@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cad-finetune"
+version = "0.1.0"
+description = "Standard project scaffold for multi-model LoRA/QLoRA finetuning with optional binary classification heads."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "PyYAML>=6.0",
+  "accelerate>=0.33.0",
+  "bitsandbytes>=0.43.0",
+  "datasets>=2.20.0",
+  "deepspeed>=0.15.0",
+  "numpy>=1.26.0",
+  "peft>=0.12.0",
+  "scikit-learn>=1.5.0",
+  "torch>=2.3.0",
+  "transformers>=4.44.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+# FlashAttention-2：需与当前 CUDA/torch 版本匹配，安装失败时请按官方 wheel 说明处理
+flash = ["flash-attn>=2.5.6"]

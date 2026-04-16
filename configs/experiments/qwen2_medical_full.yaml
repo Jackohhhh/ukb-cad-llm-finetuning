@@ -1,0 +1,8 @@
+experiment_name: qwen2_medical_full
+output_dir: outputs/checkpoints/qwen2_medical_full
+prediction_output_dir: outputs/predictions/qwen2_medical_full
+paths:
+  model: ../models/qwen2_7b_seq_cls_full.yaml
+  task: ../tasks/binary_classification.yaml
+  dataset: ../datasets/medical_binary.yaml
+  deepspeed: ../deepspeed/zero2.json

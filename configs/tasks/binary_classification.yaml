@@ -1,0 +1,6 @@
+task_name: binary_classification
+input_column: input
+label_column: output
+max_length: 1024
+truncation: true
+num_labels: 2

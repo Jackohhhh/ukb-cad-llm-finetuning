@@ -1,0 +1,48 @@
+# 本地说明（不上传 GitHub）
+PROJECT_STRUCTURE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+
+# IDE / 系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 训练产出与缓存（数据与权重勿提交）
+outputs/
+wandb/
+*.pt
+*.bin
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 数据（默认路径；若需公开样例可改为跟踪小样本）
+data/raw/*.json
+data/raw/*.jsonl

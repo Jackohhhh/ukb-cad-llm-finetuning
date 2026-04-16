@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+from typing import Any
+
+import torch.nn as nn
+from transformers import Trainer, TrainingArguments
+
+
+class WeightedTrainer(Trainer):
+    def __init__(self, *args, class_weights=None, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.class_weights = class_weights
+
+    def compute_loss(self, model, inputs, return_outputs: bool = False, **kwargs):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+
+        if self.class_weights is None:
+            loss = outputs.loss if hasattr(outputs, "loss") else outputs["loss"]
+        else:
+            logits = outputs.logits if hasattr(outputs, "logits") else outputs["logits"]
+            loss_fct = nn.CrossEntropyLoss(weight=self.class_weights.to(logits.device))
+            loss = loss_fct(logits.view(-1, model.config.num_labels), labels.view(-1))
+
+        return (loss, outputs) if return_outputs else loss
+
+
+def build_training_arguments(config: dict[str, Any], has_eval_dataset: bool) -> TrainingArguments:
+    training_cfg = config["training"]
+    runtime_cfg = config.get("runtime", {})
+
+    evaluation_strategy = training_cfg.get("evaluation_strategy", "no")
+    if not has_eval_dataset:
+        evaluation_strategy = "no"
+
+    load_best_model_at_end = bool(training_cfg.get("load_best_model_at_end", False))
+    if evaluation_strategy == "no":
+        load_best_model_at_end = False
+
+    report_to = runtime_cfg.get("report_to", [])
+    deepspeed_config_path = config.get("deepspeed_config_path")
+    if runtime_cfg.get("launcher") != "deepspeed":
+        deepspeed_config_path = None
+
+    return TrainingArguments(
+        output_dir=config.get("output_dir", "outputs/checkpoints/default"),
+        per_device_train_batch_size=training_cfg.get("per_device_train_batch_size", 1),
+        per_device_eval_batch_size=training_cfg.get("per_device_eval_batch_size", 1),
+        gradient_accumulation_steps=training_cfg.get("gradient_accumulation_steps", 1),
+        learning_rate=training_cfg.get("learning_rate", 5e-5),
+        weight_decay=training_cfg.get("weight_decay", 0.0),
+        optim=training_cfg.get("optim", "adamw_torch"),
+        lr_scheduler_type=training_cfg.get("lr_scheduler_type", "linear"),
+        num_train_epochs=training_cfg.get("num_train_epochs", 1),
+        logging_steps=training_cfg.get("logging_steps", 10),
+        logging_first_step=training_cfg.get("logging_first_step", False),
+        log_level=training_cfg.get("log_level", "passive"),
+        save_strategy=training_cfg.get("save_strategy", "steps"),
+        save_steps=training_cfg.get("save_steps", 100),
+        evaluation_strategy=evaluation_strategy,
+        eval_steps=training_cfg.get("eval_steps", 100),
+        load_best_model_at_end=load_best_model_at_end,
+        metric_for_best_model=training_cfg.get("metric_for_best_model", "f1"),
+        greater_is_better=training_cfg.get("greater_is_better", True),
+        save_total_limit=training_cfg.get("save_total_limit", 2),
+        max_steps=training_cfg.get("max_steps", -1),
+        fp16=training_cfg.get("fp16", False),
+        bf16=training_cfg.get("bf16", False),
+        remove_unused_columns=training_cfg.get("remove_unused_columns", False),
+        max_grad_norm=training_cfg.get("max_grad_norm", 1.0),
+        warmup_ratio=training_cfg.get("warmup_ratio", 0.0),
+        save_safetensors=training_cfg.get("save_safetensors", True),
+        gradient_checkpointing=runtime_cfg.get("gradient_checkpointing", False),
+        report_to=report_to,
+        logging_dir=config.get("logging_dir", "outputs/logs"),
+        seed=runtime_cfg.get("seed", 42),
+        dataloader_num_workers=runtime_cfg.get("dataloader_num_workers", 0),
+        deepspeed=deepspeed_config_path,
+        label_names=["labels"],
+    )

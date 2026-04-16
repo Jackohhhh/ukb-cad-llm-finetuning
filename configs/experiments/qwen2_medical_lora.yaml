@@ -1,0 +1,8 @@
+experiment_name: qwen2_medical_lora
+output_dir: outputs/checkpoints/qwen2_medical_lora
+prediction_output_dir: outputs/predictions/qwen2_medical_lora
+paths:
+  model: ../models/qwen2_7b_seq_cls_lora.yaml
+  task: ../tasks/binary_classification.yaml
+  dataset: ../datasets/medical_binary.yaml
+  deepspeed: ../deepspeed/zero2.json
