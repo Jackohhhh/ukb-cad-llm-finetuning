@@ -22,6 +22,7 @@ deepspeed --num_gpus=1 --module cad_finetune.cli.train \
   --launcher deepspeed \
   --bf16 \
   --tf32 true \
+  --optim adamw_torch \
   --gradient-checkpointing true \
   --dataloader-num-workers 4 \
   --num-train-epochs 5 \
@@ -42,9 +43,8 @@ deepspeed --num_gpus=1 --module cad_finetune.cli.train \
   --label-column output \
   --num-labels 2 \
   --load-best-model-at-end true \
-  --metric-for-best-model f1 \
+  --metric-for-best-model auc \
   --greater-is-better true \
-  --optim adamw_torch \
   --report-to wandb \
   --seed 42 \
   "$@"

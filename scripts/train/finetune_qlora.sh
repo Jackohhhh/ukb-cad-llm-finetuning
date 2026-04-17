@@ -55,7 +55,7 @@ deepspeed --num_gpus=1 --module cad_finetune.cli.train \
   --label-column output \
   --num-labels 2 \
   --load-best-model-at-end true \
-  --metric-for-best-model f1 \
+  --metric-for-best-model auc \
   --greater-is-better true \
   --lora-enable true \
   --lora-dropout 0.05 \

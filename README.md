@@ -79,11 +79,13 @@ bash scripts/train/finetune_lora.sh
 
 ### 全量微调
 
+脚本：[`scripts/train/finetune_full.sh`](scripts/train/finetune_full.sh)。
+
 ```bash
 bash scripts/train/finetune_full.sh
 ```
 
-### 离线评估
+### 评估测试
 
 ```bash
 bash scripts/eval/eval_binary_cls.sh
@@ -105,7 +107,7 @@ python -m cad_finetune.cli.eval --config configs/experiments/qwen2_medical_lora.
 | 路径 | 作用 |
 |------|------|
 | `configs/experiments/*.yaml` | 实验入口：`paths` 引用 model / task / dataset / deepspeed；顶层可写 `output_dir` 等 |
-| `configs/models/*.yaml` | 模型 ID、默认量化与 LoRA 结构、`target_modules` 等（**LoRA 开启时必须配置 `target_modules`**）
+| `configs/models/*.yaml` | 模型 ID、默认量化与 LoRA 结构、`target_modules` 等（**LoRA 开启时必须配置 `target_modules`**） |
 | `configs/datasets/*.yaml` | 数据路径、划分数据集、正样本过采样、`class_weights` 权重 |
 | `configs/tasks/*.yaml` | 列名、`max_length` 最大长度、类别数 |
 | `configs/deepspeed/*.json` | DeepSpeed加速：见下表 ZeRO-2 / ZeRO-3 |
@@ -120,50 +122,46 @@ python -m cad_finetune.cli.eval --config configs/experiments/qwen2_medical_lora.
 
 切换方式：训练脚本里把 `--deepspeed configs/deepspeed/zero2.json` 改成 `zero3.json`，或改实验 YAML 中 `paths.deepspeed`。
 
----
-
-## 仓库结构（精简）
-
-```text
-configs/
-  datasets/          # 数据与采样、类别权重
-  deepspeed/         # zero2.json / zero3.json
-  experiments/       # 实验组合（paths）
-  models/            # 单模型配置
-  tasks/             # 任务字段与长度
-scripts/
-  train/             # finetune_qlora.sh, finetune_lora.sh, finetune_full.sh
-  eval/              # eval_binary_cls.sh
-src/cad_finetune/
-  cli/               # train / eval / overrides
-  models/            # factory, 可选自定义序列分类封装
-  tasks/classification/
-  train/             # runner, WeightedTrainer
-  data/              # collator
-```
 
 ---
 
 ## 输出文件
 
-| 类型 | 位置（默认，可改脚本参数） |
+| 类型 | 位置 |
 |------|----------------------------|
 | 检查点 / 适配器 | `--output-dir` |
 | 训练后测试集预测 | `--prediction-output-dir` 下的 `metrics.json`、`predictions.jsonl` |
-| 训练曲线 / 指标 | `--report-to wandb` 时见 wandb 网页与项目下 `wandb/`；需先 `wandb key`。 |
+| 训练曲线 / 指标 | `--report-to wandb` 时见 wandb 网页与项目下 `wandb/`；需先执行 `wandb login` |
 
 ---
 
 ## 常见问题
 
-**模型从哪里下载？**  
+### 环境与依赖
+
+**1.模型从哪里下载？**  
 `model_name_or_path` 为 Hub ID（如 `Qwen/Qwen2-7B-Instruct`）时，首次运行会缓存到本机 Hugging Face 默认目录（或你设置的 `HF_HOME` / `cache_dir`）。
 
-**QLoRA / LoRA 训练与 Flash Attention 同时报错？**  
-可在对应训练脚本中去掉 `--attn-implementation flash_attention_2`，或改用 `--attn-implementation sdpa`，再查 torch / flash-attn / CUDA 版本兼容性。
+**2.未设置 `HF_TOKEN` 时 Hub 很慢或限流？**  
+公开模型仍可下载；若频繁 429 或很慢，建议在 [Hugging Face](https://huggingface.co/settings/tokens) 创建 Token，并在环境中设置 **`HF_TOKEN`**（或 `huggingface-cli login`）。
 
-**`ImportError: torchao ... only versions above 0.16.0 are supported`（训练 / eval 加载 LoRA 时）？**  
-部分环境（如 Colab）预装了旧版 **`torchao`**，与当前 **PEFT** 不兼容。任选其一：升级 **`pip install -U 'torchao>=0.16.0'`**；若不需要 torchao 相关路径，可 **`pip uninstall torchao`** 后重试。
+
+**3.Transformers 升级大版本后参数报错？**  
+本仓库已对 **`eval_strategy` / `processing_class`** 等与 v5 差异做兼容；若仍遇 `TrainingArguments` / `Trainer` 参数变化，请对照当前安装的 `transformers` 发行说明，或把 `pyproject.toml` 中的版本范围锁在已知可用区间。
+
+### 训练
+
+**1.显存不足（OOM）？**  
+优先：减小 **`--per-device-train-batch-size`**、增大 **`--gradient-accumulation-steps`**；或使用 **QLoRA**、多卡 **ZeRO-3**、开启 **`--gradient-checkpointing`**。
+
+
+### 检查点与评估路径
+
+**1.`load_best_model_at_end` 保存的是「最后一轮的参数权重」吗？**  
+**不一定。** 开启后保存的是**验证集上 `metric_for_best_model` 最优**（如 F1）对应的权重。若要用某一固定 step，请指向 **`checkpoint-<step>`**。
+
+- **`--checkpoint`**：必须指向 **`outputs/checkpoints/...`** 下的模型或 **`checkpoint-*`** 子目录（含适配器或全量权重）。  
+
 
 ---
 

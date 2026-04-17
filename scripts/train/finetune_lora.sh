@@ -29,11 +29,11 @@ deepspeed --num_gpus=1 --module cad_finetune.cli.train \
   --gradient-checkpointing true \
   --dataloader-num-workers 4 \
   --num-train-epochs 5 \
-  --per-device-train-batch-size 16 \
+  --per-device-train-batch-size 32 \
   --per-device-eval-batch-size 16 \
-  --gradient-accumulation-steps 2 \
+  --gradient-accumulation-steps 1 \
   --learning-rate 3e-5 \
-  --weight-decay 0.0 \
+  --weight-decay 0.01 \
   --warmup-ratio 0.1 \
   --lr-scheduler-type cosine \
   --logging-steps 10 \
@@ -49,7 +49,7 @@ deepspeed --num_gpus=1 --module cad_finetune.cli.train \
   --label-column output \
   --num-labels 2 \
   --load-best-model-at-end true \
-  --metric-for-best-model f1 \
+  --metric-for-best-model auc \
   --greater-is-better true \
   --lora-enable true \
   --lora-dropout 0.05 \
