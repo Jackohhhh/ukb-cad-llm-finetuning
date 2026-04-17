@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+import inspect
 from typing import Any
 
 import torch.nn as nn
 from transformers import Trainer, TrainingArguments
+
+
+def _eval_strategy_training_args_kwarg(strategy: str) -> dict[str, str]:
+    """Transformers 新 API 使用 eval_strategy；旧版仍用 evaluation_strategy。"""
+    if "eval_strategy" in inspect.signature(TrainingArguments.__init__).parameters:
+        return {"eval_strategy": strategy}
+    return {"evaluation_strategy": strategy}
 
 
 class WeightedTrainer(Trainer):
@@ -76,7 +84,7 @@ def build_training_arguments(config: dict[str, Any], has_eval_dataset: bool) -> 
         log_level=training_cfg.get("log_level", "passive"),
         save_strategy=training_cfg.get("save_strategy", "steps"),
         save_steps=training_cfg.get("save_steps", 100),
-        evaluation_strategy=evaluation_strategy,
+        **_eval_strategy_training_args_kwarg(evaluation_strategy),
         eval_steps=training_cfg.get("eval_steps", 100),
         load_best_model_at_end=load_best_model_at_end,
         metric_for_best_model=training_cfg.get("metric_for_best_model", "f1"),
