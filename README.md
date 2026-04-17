@@ -9,7 +9,7 @@
 | 能力 | 说明 |
 |------|------|
 | **QLoRA** | [`scripts/train/finetune_qlora.sh`](scripts/train/finetune_qlora.sh)：4bit 基座 + LoRA；优化器默认 `paged_adamw_32bit`（bitsandbytes），显存占用小 |
-| **LoRA（bf16）** | [`scripts/train/finetune_lora.sh`](scripts/train/finetune_lora.sh)：无量化、bf16 基座 + LoRA；优化器默认 `adamw_torch`，显存明显高于 QLoRA |
+| **LoRA** | [`scripts/train/finetune_lora.sh`](scripts/train/finetune_lora.sh)：无量化、bf16 基座 + LoRA；优化器默认 `adamw_torch`，显存明显高于 QLoRA |
 | **全量微调** | [`scripts/train/finetune_full.sh`](scripts/train/finetune_full.sh)：无量化、无 LoRA |
 | **DeepSpeed ZeRO** | `configs/deepspeed/zero2.json`（ZeRO-2）与 `zero3.json`（ZeRO-3）；`--deepspeed` 可切换，精度与 HF 对齐 |
 | **加权 CE** | `WeightedTrainer` + 数据集 YAML 中的 `class_weights` |
@@ -166,8 +166,7 @@ python -m cad_finetune.cli.eval --config configs/experiments/qwen2_medical_lora.
 ---
 
 ## 许可证
-
-若准备开源，请在本仓库根目录添加 **`LICENSE`** 文件（如 MIT、Apache-2.0），并在本段替换为实际许可证名称与全文链接。
+[MIT](https://github.com/Jackohhhh/ukb-cad-llm-finetuning/blob/main/LICENSE)
 
 ---
 
