@@ -35,6 +35,14 @@ def _instantiate_training_arguments(**kwargs: Any) -> TrainingArguments:
     return TrainingArguments(**filtered)
 
 
+def trainer_tokenizer_kwarg(tokenizer: Any) -> dict[str, Any]:
+    """Transformers v5+ 的 ``Trainer`` 使用 ``processing_class``；旧版使用 ``tokenizer``。"""
+    params = inspect.signature(Trainer.__init__).parameters
+    if "processing_class" in params:
+        return {"processing_class": tokenizer}
+    return {"tokenizer": tokenizer}
+
+
 class WeightedTrainer(Trainer):
     def __init__(self, *args, class_weights=None, **kwargs) -> None:
         super().__init__(*args, **kwargs)

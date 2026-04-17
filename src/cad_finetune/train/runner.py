@@ -11,7 +11,7 @@ from cad_finetune.tasks.classification.metrics import (
     build_compute_metrics,
     save_prediction_artifacts,
 )
-from cad_finetune.train.trainer import WeightedTrainer, build_training_arguments
+from cad_finetune.train.trainer import WeightedTrainer, build_training_arguments, trainer_tokenizer_kwarg
 from cad_finetune.utils.logging import get_logger
 from cad_finetune.utils.seed import set_global_seed
 
@@ -33,13 +33,13 @@ def _build_trainer(config: dict[str, Any], model, tokenizer, data_module):
 
     return WeightedTrainer(
         model=model,
-        tokenizer=tokenizer,
         args=training_args,
         train_dataset=data_module.train_dataset,
         eval_dataset=data_module.eval_dataset,
         data_collator=data_module.data_collator,
         compute_metrics=compute_metrics,
         class_weights=data_module.class_weights,
+        **trainer_tokenizer_kwarg(tokenizer),
     )
 
 
@@ -93,10 +93,10 @@ def run_eval(config: dict[str, Any], checkpoint_path: str) -> None:
     training_args = build_training_arguments(config, has_eval_dataset=data_module.test_dataset is not None)
     trainer = Trainer(
         model=model,
-        tokenizer=tokenizer,
         args=training_args,
         data_collator=data_module.data_collator,
         compute_metrics=build_compute_metrics(num_labels=config["task"].get("num_labels", 2)),
+        **trainer_tokenizer_kwarg(tokenizer),
     )
 
     if data_module.test_dataset is None:
