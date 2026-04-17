@@ -57,7 +57,9 @@ class WeightedTrainer(Trainer):
         else:
             logits = outputs.logits if hasattr(outputs, "logits") else outputs["logits"]
             loss_fct = nn.CrossEntropyLoss(weight=self.class_weights.to(logits.device))
-            loss = loss_fct(logits.view(-1, model.config.num_labels), labels.view(-1))
+            # 用 logits 最后一维作为类别数：PEFT/部分版本下 model.config 可能是 dict，无 .num_labels
+            num_classes = logits.shape[-1]
+            loss = loss_fct(logits.view(-1, num_classes), labels.view(-1))
 
         return (loss, outputs) if return_outputs else loss
 
