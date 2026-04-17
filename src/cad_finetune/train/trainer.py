@@ -83,7 +83,12 @@ def _deepspeed_config_for_trainer(config: dict[str, Any]) -> str | dict[str, Any
     return config.get("deepspeed_config_path")
 
 
-def build_training_arguments(config: dict[str, Any], has_eval_dataset: bool) -> TrainingArguments:
+def build_training_arguments(
+    config: dict[str, Any],
+    has_eval_dataset: bool,
+    *,
+    attach_deepspeed: bool | None = None,
+) -> TrainingArguments:
     training_cfg = config["training"]
     runtime_cfg = config.get("runtime", {})
 
@@ -97,7 +102,11 @@ def build_training_arguments(config: dict[str, Any], has_eval_dataset: bool) -> 
 
     report_to = runtime_cfg.get("report_to", [])
     deepspeed_arg: str | dict[str, Any] | None = None
-    if runtime_cfg.get("launcher") == "deepspeed":
+    if attach_deepspeed is False:
+        pass  # 独立 eval（python -m cli.eval）：勿传 deepspeed，否则 predict 会误走 ZeRO 推理并报错
+    elif attach_deepspeed is True:
+        deepspeed_arg = _deepspeed_config_for_trainer(config)
+    elif runtime_cfg.get("launcher") == "deepspeed":
         deepspeed_arg = _deepspeed_config_for_trainer(config)
 
     ta: dict[str, Any] = {

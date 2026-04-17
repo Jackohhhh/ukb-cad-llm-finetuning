@@ -90,7 +90,11 @@ def run_eval(config: dict[str, Any], checkpoint_path: str) -> None:
     model, tokenizer = load_checkpoint_for_eval(config, checkpoint_path)
     data_module = build_classification_datasets(config, tokenizer)
 
-    training_args = build_training_arguments(config, has_eval_dataset=data_module.test_dataset is not None)
+    training_args = build_training_arguments(
+        config,
+        has_eval_dataset=data_module.test_dataset is not None,
+        attach_deepspeed=False,
+    )
     trainer = Trainer(
         model=model,
         args=training_args,

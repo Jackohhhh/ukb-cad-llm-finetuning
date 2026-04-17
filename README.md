@@ -162,6 +162,9 @@ src/cad_finetune/
 **QLoRA / LoRA 训练与 Flash Attention 同时报错？**  
 可在对应训练脚本中去掉 `--attn-implementation flash_attention_2`，或改用 `--attn-implementation sdpa`，再查 torch / flash-attn / CUDA 版本兼容性。
 
+**`ImportError: torchao ... only versions above 0.16.0 are supported`（训练 / eval 加载 LoRA 时）？**  
+部分环境（如 Colab）预装了旧版 **`torchao`**，与当前 **PEFT** 不兼容。任选其一：升级 **`pip install -U 'torchao>=0.16.0'`**；若不需要 torchao 相关路径，可 **`pip uninstall torchao`** 后重试。
+
 ---
 
 ## 许可证

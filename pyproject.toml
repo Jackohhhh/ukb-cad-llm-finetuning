@@ -30,3 +30,4 @@ where = ["src"]
 [project.optional-dependencies]
 # FlashAttention-2：需与当前 CUDA/torch 版本匹配，安装失败时请按官方 wheel 说明处理
 flash = ["flash-attn>=2.5.6"]
+
