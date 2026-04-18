@@ -20,7 +20,6 @@ from transformers import (
 
 from cad_finetune.models.sequence_classifier import BackboneForSequenceClassification
 
-
 def _resolve_dtype(dtype_name: str | None) -> torch.dtype:
     if dtype_name == "bfloat16":
         return torch.bfloat16

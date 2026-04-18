@@ -13,6 +13,8 @@ def apply_experiment_cli_overrides(config: dict[str, Any], args: argparse.Namesp
         config.setdefault("model", {})["model_name_or_path"] = args.model_name_or_path
     if args.tokenizer_name_or_path:
         config.setdefault("model", {})["tokenizer_name_or_path"] = args.tokenizer_name_or_path
+    elif args.model_name_or_path:
+        config.setdefault("model", {})["tokenizer_name_or_path"] = args.model_name_or_path
     if args.num_labels is not None:
         config.setdefault("task", {})["num_labels"] = args.num_labels
         config.setdefault("model", {})["num_labels"] = args.num_labels

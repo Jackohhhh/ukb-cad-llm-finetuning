@@ -1,5 +1,5 @@
 model_name_or_path: Qwen/Qwen2-7B-Instruct
-tokenizer_name_or_path: Qwen/Qwen2-7B-Instruct
+tokenizer_name_or_path: null
 cache_dir: null
 trust_remote_code: false
 num_labels: 2
@@ -20,7 +20,5 @@ lora:
   lora_dropout: 0.05
   bias: none
   target_modules: all-linear
-  # 与分类头命名一致：Decoder-only 多为 score；BERT 系多为 classifier；不存在的名字可能导致 PEFT 报错，可删。
   modules_to_save:
     - score
-    - classifier
