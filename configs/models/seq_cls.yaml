@@ -22,3 +22,4 @@ lora:
   target_modules: all-linear
   modules_to_save:
     - score
+    - classifier
