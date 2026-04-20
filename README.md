@@ -1,6 +1,6 @@
-# 🩺 cad-finetune
+# 🩺 MedLLM-Finetuning
 
-基于 **Hugging Face Transformers**、**PEFT** 与 **DeepSpeed** 的医疗文本 / CAD 二分类微调脚手架。
+基于 **Hugging Face Transformers**、**PEFT** 与 **DeepSpeed** 的医疗文本二分类微调框架。
 
 本项目提供了一套开箱即用的微调流程，旨在降低医疗大语言模型（LLM）的训练门槛，提供高效、灵活的训练体验。
 
@@ -8,6 +8,7 @@
 * **多模式支持：** 兼容 QLoRA（4bit + LoRA）、LoRA（bf16 全精度基座）与全量微调。
 * **硬件友好：** 深度集成 DeepSpeed，支持多卡 ZeRO 优化，缓解 OOM 焦虑。
 * **配置驱动：** 将繁琐的超参抽离为 YAML 配置，代码与参数解耦，易于复现。
+
 
 ---
 
@@ -56,8 +57,8 @@
 **前置依赖：** Python ≥ 3.10，Linux 操作系统，NVIDIA GPU（驱动与 CUDA 需与 PyTorch 匹配）。
 
 ```bash
-git clone https://github.com/Jackohhhh/ukb-cad-llm-finetuning.git
-cd ukb-cad-llm-finetuning
+git clone https://github.com/Jackohhhh/MedLLM-Finetuning.git
+cd MedLLM-Finetuning
 
 # 使用可编辑模式安装（推荐开发环境使用）
 pip install -e .
@@ -123,6 +124,16 @@ bash scripts/eval/eval_binary_cls.sh --checkpoint outputs/checkpoints/Qwen_Qwen2
 * **预测结果：** 训练后测试集的预测结果位于 `outputs/predictions/<model_slug>_<模式>/` 下的 `metrics.json` 和 `predictions.jsonl`。
 * **训练日志：** 若启用了 `--report-to wandb`，请在 W&B 控制台查看曲线；本地日志保存在 `wandb/` 目录下。
 
+---
+## 💻 硬件需求（实测）
+
+在集成 **DeepSpeed** 与 **QLoRA** 的前提下，可在**消费级 NVIDIA GPU** 上对常见 7B / 8B 级模型做微调实验。下表为**经验范围**，实际占用随序列长度、批量、ZeRO 阶段等变化；若 OOM，见下文「常见问题」。
+
+| 模型规模 | 精度 / 策略 | 显存（约） | 适合 GPU（参考） |
+| :--- | :--- | :--- | :--- |
+| 7B / 8B（如 Llama-3） | QLoRA（4bit） | ~10 GB 起 | RTX 3060、4060 等 |
+| 7B / 8B（如 Qwen2） | LoRA（bf16 基座） | ~32 GB 起 | RTX 4080、3090 等 |
+| 7B / 8B | 全量微调 | ~100 GB+ | A100 80GB、多卡 ZeRO 等 |
 ---
 
 ## ❓ 常见问题 (FAQ)
