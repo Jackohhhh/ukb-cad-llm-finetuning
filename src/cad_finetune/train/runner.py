@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
-from transformers import Trainer
+from transformers import Trainer, TrainerCallback
 
 from cad_finetune.models import build_model_and_tokenizer, load_checkpoint_for_eval
 from cad_finetune.tasks.classification.dataset import build_classification_datasets
@@ -19,6 +20,38 @@ from cad_finetune.utils.seed import set_global_seed
 LOGGER = get_logger(__name__)
 
 
+def _ensure_peft_adapters_record_base_model(output_dir: str | Path, base_model_name_or_path: str | None) -> None:
+    """PEFT 保存时可能不写 base_model_name_or_path；补写后其它工具可直接从 adapter_config 读取基座 id。"""
+    if not base_model_name_or_path:
+        return
+    root = Path(output_dir)
+    if not root.is_dir():
+        return
+    for cfg_path in root.rglob("adapter_config.json"):
+        try:
+            with cfg_path.open(encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if data.get("base_model_name_or_path"):
+            continue
+        data["base_model_name_or_path"] = base_model_name_or_path
+        with cfg_path.open("w", encoding="utf-8") as handle:
+            json.dump(data, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+
+
+class _AdapterBaseModelCallback(TrainerCallback):
+    """每次保存 checkpoint 后，为当次目录下的 adapter_config.json 补全 base_model_name_or_path。"""
+
+    def __init__(self, base_model_name_or_path: str) -> None:
+        self._base = base_model_name_or_path
+
+    def on_save(self, args, state, control, **kwargs):  # type: ignore[no-untyped-def]
+        _ensure_peft_adapters_record_base_model(args.output_dir, self._base)
+        return control
+
+
 def _ensure_output_dirs(config: dict[str, Any]) -> None:
     Path(config.get("output_dir", "outputs/checkpoints/default")).mkdir(parents=True, exist_ok=True)
     Path(config.get("prediction_output_dir", "outputs/predictions/default")).mkdir(
@@ -31,6 +64,11 @@ def _build_trainer(config: dict[str, Any], model, tokenizer, data_module):
     training_args = build_training_arguments(config, has_eval_dataset=data_module.eval_dataset is not None)
     compute_metrics = build_compute_metrics(num_labels=config["task"].get("num_labels", 2))
 
+    callbacks: list[TrainerCallback] = []
+    base_id = config.get("model", {}).get("model_name_or_path")
+    if base_id:
+        callbacks.append(_AdapterBaseModelCallback(base_id))
+
     return WeightedTrainer(
         model=model,
         args=training_args,
@@ -39,6 +77,7 @@ def _build_trainer(config: dict[str, Any], model, tokenizer, data_module):
         data_collator=data_module.data_collator,
         compute_metrics=compute_metrics,
         class_weights=data_module.class_weights,
+        callbacks=callbacks,
         **trainer_tokenizer_kwarg(tokenizer),
     )
 
@@ -61,6 +100,10 @@ def run_train(config: dict[str, Any]) -> None:
     trainer.save_model(config["output_dir"])
     tokenizer.save_pretrained(config["output_dir"])
     trainer.save_state()
+    _ensure_peft_adapters_record_base_model(
+        config["output_dir"],
+        config.get("model", {}).get("model_name_or_path"),
+    )
 
     trainer.log_metrics("train", train_result.metrics)
     trainer.save_metrics("train", train_result.metrics)

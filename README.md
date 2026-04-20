@@ -38,6 +38,7 @@
 
 | 模型类型 | 模型名称 | Hub ID |
 | :--- | :--- | :--- |
+| **小参数量编码器**| BioBERT (约1B) | `dmis-lab/biobert-v1.1` |
 | **医用大模型** | MedAlpaca (7B) | `medalpaca/medalpaca-7b` |
 | | Meditron (7B) | `epfl-llm/meditron-7b` |
 | | Med42 (8B) | `m42-health/Llama3-Med42-8B` |
@@ -46,7 +47,6 @@
 | | Llama 2 (7B) | `meta-llama/Llama-2-7b-chat-hf` |
 | | Llama 3 (8B) | `meta-llama/Meta-Llama-3-8B-Instruct` |
 | | Gemma 2 (9B) | `google/gemma-2-9b-it` |
-| **小参数量编码器**| BioBERT (约1B) | `dmis-lab/biobert-v1.1` |
 
 *注：对于受保护的模型（Gated Models），请确保已在 Hugging Face 接受许可，并在环境中配置了 `HF_TOKEN`。BioBERT 等编码器架构只支持lora和全量微调。*
 
